@@ -1,9 +1,30 @@
-1. Create 2 Tablespaces: one with 1 Gb and 2 datafiles, tablespace should be named "vehicles_fleet​"
+﻿1. Create 2 Tablespaces: one with 1 Gb and 2 datafiles, tablespace should be named "vehicles_fleet​"
 and the other one with the name "test_purposes​" with 500 Mb and 1 datafile. (0.5)
+
+CREATE TABLESPACE vehicles_fleet DATAFILE
+'C:\oraclexe\app\oracle\oradata\vehicles_fleet_1.dbf' size 512M,
+'C:\oraclexe\app\oracle\oradata\vehicles_fleet_2.dbf' size 512M;
+
+CREATE TABLESPACE test_purposes DATAFILE
+'C:\oraclexe\app\oracle\oradata\test_purposes.dbf' size 500M;
+
 2. Create an Undo tablespace with 5Mb​ of space and 1 datafile (0.5)
+
+CREATE UNDO TABLESPACE TSUNDO DATAFILE
+'C:\oraclexe\app\oracle\oradata\TSUndo_1.dbf' size 5M;
+
 3. Set the undo tablespace to be used in the system (0.5)
+
+ALTER SYSTEM SET UNDO_TABLESPACE = UNDOTBS1;
+
 4. Create a DBA user and assign it to the tablespace called "vehicles_fleet​", this user has unlimited
 space on the tablespace (0.5)
+
+CREATE USER JuanDBA
+IDENTIFIED BY 123
+DEFAULT TABLESPACE vehicles_fleet;
+QUOTA unlimited on vehicles_fleet;
+
 5. Assign the dba role and permissions to connect to the user just created (0.5)
 6. Create 3 profiles. (0.5)
 a. Profile 1: "manager_profile​" password life 40 days, one session per user, 15 minutes idle, 4
