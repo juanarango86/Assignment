@@ -39,5 +39,46 @@ failed login attempts
 8. Create 4 users, assign them the tablespace "vehicles_fleet​"; profiles created should be used for the
 users, all the users should be allow to connect to the database. Use the role "without_privileges"​ for
 users associate with profiles: manager_profile​, finance_profile​ and service_profile​. (0.5)
+
+R// 
+CREATE USER USUARIO_MANAGER
+IDENTIFIED BY USUARIO_MANAGER
+DEFAULT TABLESPACE vehicles_fleet
+PROFILE manager_profile;
+
+CREATE USER USUARIO_FINANCE
+IDENTIFIED BY USUARIO_FINANCE
+DEFAULT TABLESPACE vehicles_fleet
+PROFILE finance_profile;
+
+CREATE USER USUARIO_SERVICE
+IDENTIFIED BY USUARIO_SERVICE
+DEFAULT TABLESPACE vehicles_fleet
+PROFILE service_profile;
+
+CREATE USER USUARIO_DEVELOPMENT
+IDENTIFIED BY USUARIO_DEVELOPMET
+DEFAULT TABLESPACE vehicles_fleet
+PROFILE development;
+
+GRANT CREATE SESSION TO USUARIO_MANAGER, USUARIO_FINANCE, USUARIO_SERVICE,USUARIO_DEVELOPMENT;
+GRANT without_privileges TO USUARIO_MANAGER, USUARIO_FINANCE, USUARIO_SERVICE;
+
+
+
 9. Lock the users associate with profiles: manager_profile​, finance_profile​ and service_profile​. (0.5)
+
+R//
+ALTER USER USUARIO_MANAGER ACCOUNT LOCK;
+
+ALTER USER USUARIO_FINANCE ACCOUNT LOCK;
+
+ALTER USER USUARIO_SERVICE ACCOUNT LOCK;
+
+SELECT * FROM SYS.DBA_USERS
+
+
 10. Delete the tablespace called "test_purposes​" (0.5)
+
+R//
+DROP TABLESPACE test_purposes;
