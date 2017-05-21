@@ -1,0 +1,632 @@
+Punto 2
+
+--Tabla Conductor
+CREATE TABLE Drivers(
+       ID_Driver NUMBER PRIMARY KEY,
+       Full_Name varchar(100) NOT NULL,
+       Employee_Number varchar(100) NOT NULL UNIQUE
+       );
+--Tipos de Vehiculos
+CREATE TABLE Type_Of_Vehicle(
+            IDType_Of_Vehicle NUMBER PRIMARY KEY,
+            Description VARCHAR(100) NOT NULL,
+            Special_Quantification VARCHAR(1)NOT NULL
+            );
+--Tipos de Servicio
+CREATE TABLE Type_Of_Service(
+            IDType_Of_Service NUMBER PRIMARY KEY,
+            Description VARCHAR(255) NOT NULL
+            );
+--Tabla Vehiculos
+CREATE TABLE Vehicle(
+                IDVehicle NUMBER PRIMARY KEY ,
+                Vehicle_Number varchar(100) NOT NULL  UNIQUE,
+                Plate varchar(10)  UNIQUE NOT NULL,
+                Vehicle_Status varchar(100),
+CONSTRAINT Check_Vehicle_Status CHECK (Vehicle_Status IN ('Active', 'Inactive', 'Repairing', 'Sold')),
+                Mileage NUMBER(30) NOT NULL,
+                Vehicle_Model varchar(10),
+CONSTRAINT Chk_Vehicle_Model CHECK (Vehicle_Model IN ('2010', '2011')),
+                Current_value NUMBER NOT NULL,
+                Replacement_Value NUMBER NOT NULL,
+                Taxed_date date NOT NULL,
+                Bough_Day date NOT NULL,
+                Actual_Policy_Number VARCHAR(255) NOT NULL,
+                Written_Off VARCHAR(255) NOT NULL,
+                FK_IDType_Of_Vehicle NUMBER NOT NULL, 
+CONSTRAINT FK_Type_Of_Vehicle FOREIGN KEY (FK_IDType_Of_Vehicle) REFERENCES Type_Of_Vehicle(IDType_Of_Vehicle) 
+              );
+--Reclamos de Seguro
+CREATE TABLE Insurance_Claims(
+            IDInsurance_Claims NUMBER PRIMARY KEY,
+            FK_IDInsurance_Claims NUMBER NOT NULL,
+            CONSTRAINT FK_Vehicle_Insurance_Claims FOREIGN KEY (FK_IDInsurance_Claims) REFERENCES Vehicle(IDVehicle),
+            Number_Policy VARCHAR(100) NOT NULL,
+            Date_Loss date NOT NULL,
+            Date_Of_Issue date NOT NULL,
+            Nature_Of_Paiment VARCHAR(100) NOT NULL,
+            Damages VARCHAR(600) NOT NULL
+           );
+--Costo de Reparacion
+CREATE TABLE Cost_Repair(
+            IDRepair_Cost NUMBER PRIMARY KEY,
+            Repair_Cost_Date date NOT NULL,
+            Description varchar(255) NOT NULL,
+            Amount NUMBER NOT NULL,
+            Repair_Cost_Status varchar(200) CONSTRAINT CHK_Repair_Cost CHECK (Repair_Cost_Status IN ('Pending', 'Paid')),
+            FK_IDVehicle NUMBER NOT NULL,
+CONSTRAINT FK_Vehicle_Repair_Cost FOREIGN KEY (FK_IDVehicle) REFERENCES Vehicle(IDVehicle)
+);
+--Servicio   
+CREATE TABLE Service(
+              ID_Service NUMBER PRIMARY KEY,
+              Name_Service VARCHAR(255) NOT NULL,
+              Date_Issue date NOT NULL,
+              Description VARCHAR(255) NOT NULL,
+              Status_Service VARCHAR(255),
+              CONSTRAINT Chk_Service_Status CHECK (Status_Service IN ('Pending', 'Squeduled', 'Ok')),
+              FK_IDVehicle NUMBER NOT NULL,
+              CONSTRAINT FK_Vehicle_Service FOREIGN KEY (FK_IDVehicle) REFERENCES Vehicle(IDVehicle)
+              --TOTAL
+              --
+            );
+--Detalles del Servicio
+CREATE TABLE Detail_Service(
+              IDService_Details NUMBER PRIMARY KEY,
+              Service_Details_Status VARCHAR(255)CONSTRAINT Chk_Service_Details_Status CHECK (Service_Details_Status IN ('Ok','Pending', 'Needs_repair', 'Observations')),
+              FK_IDService NUMBER NOT NULL,
+              FK_IDTypes_Of_Service NOT NULL,
+CONSTRAINT FK_Service FOREIGN KEY (FK_IDService) REFERENCES Service(ID_Service),
+CONSTRAINT FK_Type_Of_Service FOREIGN KEY (FK_IDTypes_Of_Service) REFERENCES Type_Of_Service(IDType_Of_Service)
+
+--VALOR 
+            );          
+--Tabla Calificacion Conductor       
+CREATE TABLE Driver_Qualification(
+              IDType_Of_Vehicle NUMBER NOT NULL,
+              IDDriver NUMBER NOT NULL,
+              Driver_Quantif_Status VARCHAR(15),
+              CONSTRAINT Chk_Special_Quan_Status CHECK (Driver_Quantif_Status IN ('Active', 'Inactive','Expired', 'Disqualified')),
+              Assignment_Date date NOT NULL,
+              CONSTRAINT FK_Type_Vehic_Driv_Qualif FOREIGN KEY (IDType_Of_Vehicle) REFERENCES Type_Of_Vehicle(IDType_Of_Vehicle),
+              CONSTRAINT FK_Driver_Driver_Qualif FOREIGN KEY (IDDriver) REFERENCES Drivers (ID_Driver),
+              PRIMARY KEY (IDType_Of_Vehicle,IDDriver)
+);       
+--Vehiculos conductores
+CREATE TABLE Vehicles_Per_Driver(
+       IDVehicle NUMBER not null,
+       CONSTRAINT FK_Vehicle FOREIGN KEY (IDVehicle) REFERENCES Vehicle(IDVehicle),
+       IDDriver NUMBER not null,
+       CONSTRAINT FK_Driver FOREIGN KEY (IDDriver) REFERENCES Drivers(ID_Driver),
+       PRIMARY KEY (IDVEHICLE, IDDriver)
+      );  
+   
+
+
+-------------------SECUENCIAS   
+CREATE SEQUENCE ID_Driver_Seq_Driver
+        START WITH 1 
+        INCREMENT BY 1 
+        NOMAXVALUE; 
+--DROP SEQUENCE ID_Driver_Seq_Driver                      
+CREATE TRIGGER T_Driver_Seq
+        BEFORE INSERT ON Drivers
+        FOR EACH ROW
+        BEGIN
+        SELECT ID_Driver_Seq_Driver.nextval INTO :new.ID_Driver FROM dual;
+        END;
+--DROP TRIGGER T_Driver_Seq                      
+CREATE SEQUENCE Seq_Vehicle_IDVehicle 
+              START WITH 1 
+              INCREMENT BY 1 
+              NOMAXVALUE; 
+--DROP SEQUENCE Seq_Vehicle_IDVehicle
+CREATE TRIGGER Trig_Vehicle_Seq
+              BEFORE INSERT ON Vehicle
+              FOR EACH ROW
+              BEGIN
+              SELECT Seq_Vehicle_IDVehicle.nextval INTO :new.IDVehicle FROM dual;
+              END;
+--DROP TRIGGER Trig_Vehicle_Seq
+CREATE SEQUENCE Seq_Repair_Cost 
+              START WITH 1 
+              INCREMENT BY 1 
+              NOMAXVALUE; 
+--DROP SEQUENCE Seq_Repair_Cost
+CREATE TRIGGER T_Repair_ost
+              BEFORE INSERT ON Cost_Repair
+              FOR EACH ROW
+              BEGIN
+              SELECT Seq_Repair_Cost.nextval INTO :new.IDRepair_Cost FROM dual;
+         
+END;
+--DROP TRIGGER T_Repair_ost
+CREATE SEQUENCE Seq_Type_Of_Vehicle 
+          START WITH 1 
+          INCREMENT BY 1 
+          NOMAXVALUE; 
+--DROP SEQUENCE Seq_Type_Of_Vehicle          
+CREATE TRIGGER T_Type_Of_Vehicle
+        BEFORE INSERT ON Type_Of_Vehicle
+        FOR EACH ROW
+        BEGIN
+        SELECT Seq_Type_Of_Vehicle.nextval INTO :new.IDType_Of_Vehicle FROM dual;
+END;
+--DROP TRIGGER T_Type_Of_Vehicle            
+CREATE SEQUENCE SEQ_Service 
+              START WITH 1 
+              INCREMENT BY 1 
+              NOMAXVALUE;        
+--DROP SEQUENCE SEQ_Service           
+CREATE TRIGGER T_Service
+              BEFORE INSERT ON Service
+              FOR EACH ROW
+              BEGIN
+              SELECT seq_service.nextval INTO :new.ID_Service FROM dual;
+  END;
+--DROP TRIGGER T_Service
+CREATE SEQUENCE Seq_Insurance_Claims
+              START WITH 1 
+              INCREMENT BY 1 
+              NOMAXVALUE; 
+--DROP SEQUENCE Seq_Insurance_Claims            
+CREATE TRIGGER T_Insurance_Claims
+            BEFORE INSERT ON Insurance_Claims
+            FOR EACH ROW
+            BEGIN
+            SELECT Seq_Insurance_Claims.nextval INTO :new.IDInsurance_Claims FROM dual;
+            END;
+--DROP TRIGGER T_Insurance_Claims            
+CREATE SEQUENCE Seq_Service_Details 
+            START WITH 1 
+            INCREMENT BY 1 
+            NOMAXVALUE;
+--DROP SEQUENCE Seq_Service_Details          
+CREATE TRIGGER T_Service_Details
+            BEFORE INSERT ON Detail_Service
+            FOR EACH ROW
+            BEGIN
+            SELECT Seq_Service_Details.nextval INTO :new.IDService_Details FROM dual;
+END;
+--DROP TRIGGER T_Service_Details          
+CREATE SEQUENCE Seq_Type_Of_Service 
+                START WITH 1 
+                INCREMENT BY 1 
+                NOMAXVALUE;
+ --DROP SEQUENCE Seq_Type_Of_Service             
+CREATE TRIGGER T_Type_Of_Service
+              BEFORE INSERT ON Type_Of_Service
+              FOR EACH ROW
+              BEGIN
+              SELECT Seq_Type_Of_Service.nextval INTO :new.IDType_Of_Service FROM dual;
+END;
+--DROP TRIGGER T_Type_Of_Service
+
+
+
+--INSERCION DE DATOS
+
+INSERT INTO  DRIVERS(Employee_Number,Full_Name) VALUES ('94068498564564', 'JUAN ARANGO');
+
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('84068493','Victor Galvis');
+--Fila 3
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('74068424','STIVEN quiroz');
+--Fila 4
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('64068397','Luis Alberto Rodríguez');
+--Fila 5
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('54068360','Luis Eduardo Rodríguez');
+--Fila 6
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('44068323','José Antonio Rodríguez');
+--Fila 7
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('34068286','Luis Alberto González');
+--Fila 8
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('24068249','Luis Eduardo Ramírez');
+--Fila 9
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('14068211','Luis Alberto Sánchez');
+--Fila 10
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('4068174','José Antonio Martínez');
+--Fila 11
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('5931862','Luis Carlos Rodríguez');
+--Fila 12
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('15931899','Luis Eduardo Gómez');
+--Fila 13
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('25931936','Jaime Rodríguez');
+--Fila 14
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('35931973','Alfonso Rodríguez');
+--Fila 15
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('45932011','José Rodríguez');
+--Fila 16
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('55932048','Rafael Rodríguez');
+--Fila 17
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('65932085','Álvaro Hernández');
+--Fila 18
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('75932122','Jaime Ramírez');
+--Fila 19
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('85932159','Pedro Rodríguez');
+--Fila 20
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('95932196','Carlos Rodríguez');
+--Fila 21
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('10593223','Jaime García');
+--Fila 22
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('11593227','Alfonso López');
+--Fila 23
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('12593230','María del Carmen Rodríguez');
+--Fila 24
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('13593234','Luz Marina Rodríguez');
+--Fila 25
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('14593238','Luz Marina Sánchez');
+--Fila 26
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('15593241','María del Carmen Sánchez');
+--Fila 27
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('16593245','Luz Marina González');
+--Fila 28
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('17593249','María del Carmen González');
+--Fila 29
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('18593253','Luz Marina García');
+--Fila 30
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('19593256','Luz Marina Gómez');
+--Fila 31
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('20593260','María del Carmen Gómez');
+--Fila 32
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('21593264','María del Carmen Hernández');
+--Fila 33
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('22593267','Rosalba Rodríguez');
+--Fila 34
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('23593271','María Rodríguez');
+--Fila 35
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('24593275','Mercedes Rodríguez');
+--Fila 36
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('25593279','María González');
+--Fila 37
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('26593282','Rosalba Hernández');
+--Fila 38
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('27593286','Isabel García');
+--Fila 39
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('28593290','Carmen Rodríguez');
+--Fila 40
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('29593293','Graciela Rodríguez');
+--Fila 41
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('30593297','Cecilia Rodríguez');
+--Fila 42
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('31593301','Margarita Rodríguez');
+--Fila 43
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('32593305','Manuel Antonio Fernández Ortubey');
+--Fila 44
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('33593308',' Eloísa Beatriz Giménez Gómez');
+--Fila 45
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('34593312','María Rosa Frías');
+--Fila 46
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('35593316','Juan María Estévez Raimúndez');
+--Fila 47
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('36593319','Daniel José Narancio Araújo');
+--Fila 48
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('37593323','Julio César Ruiz Norman');
+--Fila 49
+INSERT INTO DRIVERS (EMPLOYEE_NUMBER, FULL_NAME) VALUES ('38593327','Carolina Emilia Herrera');
+commit;
+--SELECT * FROM Drivers
+-------------------------------------------------------------------------------------------------------
+INSERT INTO Type_Of_Vehicle ( Description, Special_Quantification ) VALUES('heavy rigid vehicle', 'Y');
+INSERT INTO Type_Of_Vehicle ( Description, Special_Quantification ) VALUES('Moped', 'N');
+INSERT INTO Type_Of_Vehicle ( Description, Special_Quantification ) VALUES('Motorcycle', 'N');
+INSERT INTO Type_Of_Vehicle ( Description, Special_Quantification ) VALUES('Trike Motorcycle', 'Y');
+INSERT INTO Type_Of_Vehicle ( Description, Special_Quantification ) VALUES('Car', 'N');
+INSERT INTO Type_Of_Vehicle ( Description, Special_Quantification ) VALUES('Ligth rigid heavy vehicle', 'Y');
+INSERT INTO Type_Of_Vehicle ( Description, Special_Quantification ) VALUES('Medium rigid heavy vehicle', 'Y');
+INSERT INTO Type_Of_Vehicle ( Description, Special_Quantification ) VALUES('Tractor', 'Y');
+INSERT INTO Type_Of_Vehicle ( Description, Special_Quantification ) VALUES('WheellChair Vehicle', 'Y');
+COMMIT;          
+--Moped, Motorcycle, Trike motorcycle, Car, Light,rigid heavy vehicle, Medium rigid heavy vehicle, heavy rigid vehicle, tractor, Wheelchair vehicle.           
+--SELECT * FROM Type_Of_Vehicle
+---------------------------------------------------------------------------------------------------------------------------------------------
+INSERT INTO Type_Of_Service (Description)  VALUES ('Automatic Transmission Fluid');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Baterry and clabes');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Belts');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Brakes');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Cabin air filter');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Chasis Lubrication');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Dashboard Indicator ligth on');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Cooland(Antifreeze)');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Engine Air Filter');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Air Filter');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Engine Oil');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Hoses');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Ligths');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Power Steering fluid');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Steering and Suspension');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Tire Inflations and condition');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Whell Alignment');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Windshield Washer Fluid');
+INSERT INTO Type_Of_Service (Description)  VALUES ('Wiper Blades');
+COMMIT;           
+--SELECT * FROM Type_Of_Service
+ ----------------------------------------------------------------------------------------------------------
+INSERT INTO Vehicle (Vehicle_Number,Plate,Vehicle_Status,Mileage,Vehicle_Model, Current_value, Replacement_Value, Taxed_date,Bough_Day,Actual_Policy_Number, Written_Off,FK_IDTYPE_OF_VEHICLE)
+ VALUES ('002','WER454','Inactive','1850','2010','21000000','18000000',TO_DATE('2017-05-30','yyyy-mm-dd'),TO_DATE('2016-12-03','yyyy-mm-dd'), '098345','N','21');
+ INSERT INTO VEHICLE (VEHICLE_NUMBER, PLATE, VEHICLE_STATUS, MILEAGE, VEHICLE_MODEL, CURRENT_VALUE, REPLACEMENT_VALUE, TAXED_DATE, BOUGH_DAY, ACTUAL_POLICY_NUMBER, WRITTEN_OFF, FK_IDTYPE_OF_VEHICLE) VALUES ('003','FAK579','Active',4000.0,'2010',150000.0,10000.0,to_date('24/07/2017', 'DD/MM/YYYY'),to_date('01/01/2018', 'DD/MM/YYYY'),'156782','S','22');
+--Fila 2
+INSERT INTO VEHICLE (VEHICLE_NUMBER, PLATE, VEHICLE_STATUS, MILEAGE, VEHICLE_MODEL, CURRENT_VALUE, REPLACEMENT_VALUE, TAXED_DATE, BOUGH_DAY, ACTUAL_POLICY_NUMBER, WRITTEN_OFF, FK_IDTYPE_OF_VEHICLE) VALUES ('004','QFO640','Active',7000.0,'2011',3000000.0,20000.0,to_date('01/05/2017', 'DD/MM/YYYY'),to_date('01/05/2017', 'DD/MM/YYYY'),'156783','N','23');
+--Fila 3
+INSERT INTO VEHICLE (VEHICLE_NUMBER, PLATE, VEHICLE_STATUS, MILEAGE, VEHICLE_MODEL, CURRENT_VALUE, REPLACEMENT_VALUE, TAXED_DATE, BOUGH_DAY, ACTUAL_POLICY_NUMBER, WRITTEN_OFF, FK_IDTYPE_OF_VEHICLE) VALUES ('005','BLM074','Inactive',10000.0,'2011',80000.0,50000.0,to_date('30/09/2018', 'DD/MM/YYYY'),to_date('02/02/2017', 'DD/MM/YYYY'),'156784','S','24');
+--Fila 4
+INSERT INTO VEHICLE (VEHICLE_NUMBER, PLATE, VEHICLE_STATUS, MILEAGE, VEHICLE_MODEL, CURRENT_VALUE, REPLACEMENT_VALUE, TAXED_DATE, BOUGH_DAY, ACTUAL_POLICY_NUMBER, WRITTEN_OFF, FK_IDTYPE_OF_VEHICLE) VALUES ('006','LYG335','Repairing',4000.0,'2010',3000000.0,20000.0,to_date('01/08/2011', 'DD/MM/YYYY'),to_date('01/01/2018', 'DD/MM/YYYY'),'156785','N','25');
+--Fila 5
+INSERT INTO VEHICLE (VEHICLE_NUMBER, PLATE, VEHICLE_STATUS, MILEAGE, VEHICLE_MODEL, CURRENT_VALUE, REPLACEMENT_VALUE, TAXED_DATE, BOUGH_DAY, ACTUAL_POLICY_NUMBER, WRITTEN_OFF, FK_IDTYPE_OF_VEHICLE) VALUES ('007','BIL894','Active',7000.0,'2011',4000000.0,35000.0,to_date('29/09/2018', 'DD/MM/YYYY'),to_date('02/03/2017', 'DD/MM/YYYY'),'156786','S','26');
+--Fila 6
+INSERT INTO VEHICLE (VEHICLE_NUMBER, PLATE, VEHICLE_STATUS, MILEAGE, VEHICLE_MODEL, CURRENT_VALUE, REPLACEMENT_VALUE, TAXED_DATE, BOUGH_DAY, ACTUAL_POLICY_NUMBER, WRITTEN_OFF, FK_IDTYPE_OF_VEHICLE) VALUES ('008','CVY341','Sold',10000.0,'2011',150000.0,10000.0,to_date('01/05/2017', 'DD/MM/YYYY'),to_date('02/03/2017', 'DD/MM/YYYY'),'156787','N','27');
+--Fila 7
+INSERT INTO VEHICLE (VEHICLE_NUMBER, PLATE, VEHICLE_STATUS, MILEAGE, VEHICLE_MODEL, CURRENT_VALUE, REPLACEMENT_VALUE, TAXED_DATE, BOUGH_DAY, ACTUAL_POLICY_NUMBER, WRITTEN_OFF, FK_IDTYPE_OF_VEHICLE) VALUES ('009','FTO760','Sold',4000.0,'2010',230000.0,20000.0,to_date('24/07/2017', 'DD/MM/YYYY'),to_date('01/01/2018', 'DD/MM/YYYY'),'156788','S','28');
+--Fila 8
+INSERT INTO VEHICLE (VEHICLE_NUMBER, PLATE, VEHICLE_STATUS, MILEAGE, VEHICLE_MODEL, CURRENT_VALUE, REPLACEMENT_VALUE, TAXED_DATE, BOUGH_DAY, ACTUAL_POLICY_NUMBER, WRITTEN_OFF, FK_IDTYPE_OF_VEHICLE) VALUES ('010','FAN602','Active',7000.0,'2011',80000.0,50000.0,to_date('30/09/2018', 'DD/MM/YYYY'),to_date('02/02/2017', 'DD/MM/YYYY'),'156789','S','29');
+--Fila 9
+INSERT INTO VEHICLE (VEHICLE_NUMBER, PLATE, VEHICLE_STATUS, MILEAGE, VEHICLE_MODEL, CURRENT_VALUE, REPLACEMENT_VALUE, TAXED_DATE, BOUGH_DAY, ACTUAL_POLICY_NUMBER, WRITTEN_OFF, FK_IDTYPE_OF_VEHICLE) VALUES ('011','CHC471','Active',10000.0,'2011',3000000.0,20000.0,to_date('30/09/2018', 'DD/MM/YYYY'),to_date('01/05/2017', 'DD/MM/YYYY'),'156790','N','30');
+
+ COMMIT;
+ --SELECT * FROM VEHICLE
+------------------------------------------------------------------------------------------------------------
+INSERT INTO Cost_Repair( Repair_Cost_Date, Description, Amount, Repair_Cost_Status,FK_IDVEHICLE ) VALUES (TO_DATE ('2015-09-30', 'yyyy-mm-dd'), 'Daño Direccion', '1', 'Pending','5');
+INSERT INTO Cost_Repair( Repair_Cost_Date, Description, Amount, Repair_Cost_Status,FK_IDVEHICLE ) VALUES (TO_DATE ('2016-08-30', 'yyyy-mm-dd'), 'Daño Direccion', '1', 'Pending','5');
+INSERT INTO Cost_Repair( Repair_Cost_Date, Description, Amount, Repair_Cost_Status,FK_IDVEHICLE ) VALUES (TO_DATE ('2016-06-23', 'yyyy-mm-dd'), 'Daño Direccion', '1', 'Pending','5');
+INSERT INTO Cost_Repair( Repair_Cost_Date, Description, Amount, Repair_Cost_Status,FK_IDVEHICLE ) VALUES (TO_DATE ('2016-03-12', 'yyyy-mm-dd'), 'Daño Direccion', '1', 'Pending','5');
+INSERT INTO Cost_Repair( Repair_Cost_Date, Description, Amount, Repair_Cost_Status,FK_IDVEHICLE ) VALUES (TO_DATE ('2015-09-11', 'yyyy-mm-dd'), 'Daño Direccion', '1', 'Pending','5');
+COMMIT;
+--SELECT * FROM Cost_Repair
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+INSERT INTO Insurance_Claims (FK_IDInsurance_Claims,Number_Policy,Date_Loss,Date_Of_Issue,Nature_Of_Paiment, Damages) 
+VALUES ('5','77564883', TO_DATE('2015-09-30', 'yyyy-mm-dd'), TO_DATE('2015-10-03', 'yyyy-mm-dd'),'Cash','Total Loss');
+--Fila 1
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('77','77732144',to_date('31/08/2015', 'DD/MM/YYYY'),to_date('31/10/2015', 'DD/MM/YYYY'),'Cash','REPAIR');
+--Fila 2
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('78','77732145',to_date('02/07/2016', 'DD/MM/YYYY'),to_date('03/08/2016', 'DD/MM/YYYY'),'Cash','Total Loss');
+--Fila 3
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('79','77732146',to_date('04/05/2017', 'DD/MM/YYYY'),to_date('07/05/2017', 'DD/MM/YYYY'),'check','REPAIR');
+--Fila 4
+INSERT INTO INSURANCE_CLAIMS (IDINSURANCE_CLAIMS, FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('80','77732147',to_date('06/03/2018', 'DD/MM/YYYY'),to_date('08/02/2018', 'DD/MM/YYYY'),'check','Total Loss');
+--Fila 5
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('81','77732148',to_date('06/01/2019', 'DD/MM/YYYY'),to_date('12/11/2018', 'DD/MM/YYYY'),'Cash','REPAIR');
+--Fila 6
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('82','77732149',to_date('08/11/2019', 'DD/MM/YYYY'),to_date('16/08/2019', 'DD/MM/YYYY'),'Cash','Total Loss');
+--Fila 7
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('83','77732150',to_date('09/09/2020', 'DD/MM/YYYY'),to_date('19/05/2020', 'DD/MM/YYYY'),'check','REPAIR');
+--Fila 8
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('84','77732151',to_date('12/07/2021', 'DD/MM/YYYY'),to_date('20/02/2021', 'DD/MM/YYYY'),'Cash','Total Loss');
+--Fila 9
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('85','77732152',to_date('14/05/2022', 'DD/MM/YYYY'),to_date('24/11/2021', 'DD/MM/YYYY'),'Cash','REPAIR');
+--Fila 10
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('86','77732153',to_date('16/03/2023', 'DD/MM/YYYY'),to_date('28/08/2022', 'DD/MM/YYYY'),'check','Total Loss');
+--Fila 11
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('87','77732154',to_date('16/01/2024', 'DD/MM/YYYY'),to_date('01/06/2023', 'DD/MM/YYYY'),'check','REPAIR');
+--Fila 12
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('88','77732155',to_date('17/11/2024', 'DD/MM/YYYY'),to_date('04/03/2024', 'DD/MM/YYYY'),'Cash','Total Loss');
+--Fila 13
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('89','77732156',to_date('19/09/2025', 'DD/MM/YYYY'),to_date('06/12/2024', 'DD/MM/YYYY'),'Cash','REPAIR');
+--Fila 14
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('90','77732157',to_date('22/07/2026', 'DD/MM/YYYY'),to_date('09/09/2025', 'DD/MM/YYYY'),'check','Total Loss');
+--Fila 15
+INSERT INTO INSURANCE_CLAIMS (FK_IDINSURANCE_CLAIMS, NUMBER_POLICY, DATE_LOSS, DATE_OF_ISSUE, NATURE_OF_PAIMENT, DAMAGES) VALUES ('91','77732158',to_date('24/05/2027', 'DD/MM/YYYY'),to_date('13/06/2026', 'DD/MM/YYYY'),'Cash','REPAIR');
+
+COMMIT;
+--SELECT * FROM INSURANCE_CLAIMS            
+------------------------------------------------------------------------------------------------------------------------       
+INSERT INTO SERVICE (NAME_SERVICE, DATE_ISSUE, DESCRIPTION, STATUS_SERVICE, FK_IDVEHICLE)VALUES('Service Basic',TO_DATE ('2016-01-30', 'yyyy-mm-dd'),'Change oil','Pending',5);
+INSERT INTO SERVICE (NAME_SERVICE, DATE_ISSUE, DESCRIPTION, STATUS_SERVICE, FK_IDVEHICLE)VALUES('3000_service',TO_DATE ('2016-02-15', 'yyyy-mm-dd'),'Maintenance 1','Squeduled',77);
+INSERT INTO SERVICE (NAME_SERVICE, DATE_ISSUE, DESCRIPTION, STATUS_SERVICE, FK_IDVEHICLE)VALUES('6000_service',TO_DATE ('2016-03-16', 'yyyy-mm-dd'),'Maintenance 2','Squeduled',78);
+INSERT INTO SERVICE (NAME_SERVICE, DATE_ISSUE, DESCRIPTION, STATUS_SERVICE, FK_IDVEHICLE)VALUES('9000_service',TO_DATE ('2016-04-11', 'yyyy-mm-dd'),'Maintenance 3','Ok',79);
+INSERT INTO SERVICE (NAME_SERVICE, DATE_ISSUE, DESCRIPTION, STATUS_SERVICE, FK_IDVEHICLE)VALUES('Service Advanced',TO_DATE ('2016-05-12', 'yyyy-mm-dd'),'Maintenance 4','Ok',80)
+
+COMMIT;
+--SELECT * FROM SERVICE
+
+----------------------------------------------------------------------------------------------------------------------------------------------------              
+INSERT INTO Detail_Service(Service_Details_Status, FK_IDService, FK_IDTypes_Of_Service)
+VALUES ('Ok', '3', '1' ); 
+INSERT INTO Detail_Service(Service_Details_Status, FK_IDService, FK_IDTypes_Of_Service)
+VALUES ('Needs_repair', '11', '5' ); 
+INSERT INTO Detail_Service(Service_Details_Status, FK_IDService, FK_IDTypes_Of_Service)
+VALUES ('Observations', '12', '10' ); 
+INSERT INTO Detail_Service(Service_Details_Status, FK_IDService, FK_IDTypes_Of_Service)
+VALUES ('Needs_repair', '13', '12' ); 
+INSERT INTO Detail_Service(Service_Details_Status, FK_IDService, FK_IDTypes_Of_Service)
+VALUES ('Ok', '15', '17' ); 
+COMMIT;
+--SELECT * FROM Detail_Service      
+ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------             
+INSERT INTO Driver_Qualification ( IDType_Of_Vehicle,IDDriver,Driver_Quantif_Status,Assignment_Date ) 
+VALUES ('21','1', 'Active', TO_DATE ('2012-04-30', 'yyyy-mm-dd'));
+INSERT INTO Driver_Qualification ( IDType_Of_Vehicle,IDDriver,Driver_Quantif_Status,Assignment_Date ) 
+VALUES ('24','12', 'Inactive', TO_DATE ('2011-07-28', 'yyyy-mm-dd'));
+INSERT INTO Driver_Qualification ( IDType_Of_Vehicle,IDDriver,Driver_Quantif_Status,Assignment_Date ) 
+VALUES ('26','24', 'Expired', TO_DATE ('2009-05-12', 'yyyy-mm-dd'));
+INSERT INTO Driver_Qualification ( IDType_Of_Vehicle,IDDriver,Driver_Quantif_Status,Assignment_Date ) 
+VALUES ('28','41', 'Disqualified', TO_DATE ('2008-03-04', 'yyyy-mm-dd'));
+INSERT INTO Driver_Qualification ( IDType_Of_Vehicle,IDDriver,Driver_Quantif_Status,Assignment_Date ) 
+VALUES ('30','41', 'Disqualified', TO_DATE ('2008-03-04', 'yyyy-mm-dd'));
+INSERT INTO Driver_Qualification ( IDType_Of_Vehicle,IDDriver,Driver_Quantif_Status,Assignment_Date ) 
+VALUES ('22','41', 'Disqualified', TO_DATE ('2008-03-04', 'yyyy-mm-dd'));
+COMMIT;
+
+
+--SELECT * FROM Driver_Qualification
+-------------------------------------------------------------------------------------------------------------
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('5','1');
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('77','2');
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('78','6');
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('79','12');
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('80','24');
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('81','36');
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('82','48');
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('83','20');
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('84','10');
+INSERT INTO Vehicles_Per_Driver (IDVehicle, IDDriver) VALUES ('85','9');
+COMMIT;
+
+--SELECT * FROM Vehicles_Per_Driver
+
+----------------------------
+
+--4.) --Create a view which should be run only by users associated to "finance_profile". The view should look like this:
+--Registration_number / Mileage / Model / Current_value / class / Replacement_Value / Status /
+--Required_special_qualification? / Number_of_services / Total_money_spent_in_repairs.
+--The view should show only class of cars: Car, Light rigid heavy vehicle, Medium rigid heavy vehicle,
+--heavy rigid vehicle, tractor and and filter the cars which were bought since 2 years ago and order them
+--by mileage (descending) (0.5)
+
+--DROP VIEW FINANCE_PROFILE_VIEW
+
+CREATE OR REPLACE VIEW FINANCE_PROFILE_VIEW AS
+	SELECT 
+		VEH.VEHICLE_NUMBER, 
+		VEH.MILEAGE, 
+		VEH.VEHICLE_MODEL, 
+		VEH.CURRENT_VALUE, 
+		TOV.DESCRIPTION AS CLASS, 
+		VEH.REPLACEMENT_VALUE, 
+		VEH.VEHICLE_STATUS,
+		TOV.SPECIAL_QUANTIFICATION AS REQUIRED_SPECIAL_QUALIFICATION, 
+		(SELECT COUNT(1) FROM SERVICE WHERE SERVICE.FK_IDVEHICLE = VEH.IDVEHICLE) AS NUMBER_OF_SERVICES,
+		(SELECT SUM(AMOUNT) FROM COST_REPAIR WHERE COST_REPAIR.FK_IDVEHICLE = VEH.IDVEHICLE) AS TOTAL_MONEY_SPENT_IN_REPAIRS
+	FROM VEHICLE VEH
+		JOIN TYPE_OF_VEHICLE TOV ON TOV.IDTYPE_OF_VEHICLE = VEH.FK_IDTYPE_OF_VEHICLE
+	WHERE TOV.DESCRIPTION IN ('Car', 'Light rigid heavy vehicle', 'Medium rigid heavy vehicle', 'Heavy rigid vehicle', 'Tractor') 
+		AND TO_CHAR(VEH.BOUGH_DAY, 'YYYY') >= (TO_CHAR(SYSDATE, 'YYYY') - 2)
+	ORDER BY VEH.MILEAGE DESC;
+
+--5.) --Create a function to assign the name of the service, this function should return a string. The string
+--must have the number of mileages run, and remember each revision is performed every 3 months, the
+--name has the structure "mileage_service", for instance (3000_service, 6000_service, 9000_service). If
+--the name already exist in the service table for that vehicle, must return an empty string, otherwise you
+--need to calculate the number based on the current mileage, for instance, if the mileage of the car is
+--11560 miles the name should return "9000_service". (0.5)
+
+--DROP FUNCTION ASSIGN_NAME_OF_THE_SERVICE(VEH_ID IN VEHICLE.IDVEHICLE%TYPE)
+
+CREATE OR REPLACE FUNCTION ASSIGN_NAME_OF_THE_SERVICE(VEH_ID IN VEHICLE.IDVEHICLE%TYPE)
+RETURN VARCHAR IS
+   MILEAGE_SERVICE VARCHAR(20) := '';   
+   
+	VEHICLE_MILEAGE VEHICLE.MILEAGE%TYPE;
+	SERVICE_EXIST NUMBER(2);	
+BEGIN
+	SELECT MILEAGE INTO VEHICLE_MILEAGE FROM VEHICLE WHERE IDVEHICLE = VEH_ID;
+
+	IF VEHICLE_MILEAGE >= 3000 AND VEHICLE_MILEAGE < 6000 THEN
+		MILEAGE_SERVICE := '3000_service';
+	ELSE IF VEHICLE_MILEAGE >= 6000 AND VEHICLE_MILEAGE < 9000 THEN
+			MILEAGE_SERVICE := '6000_service';
+		ELSE IF VEHICLE_MILEAGE >= 9000 THEN
+				MILEAGE_SERVICE := '9000_service';	
+			END IF;
+		END IF;	
+	END IF;
+
+	SELECT COUNT(1) INTO SERVICE_EXIST FROM SERVICE WHERE NAME_SERVICE LIKE '%'||MILEAGE_SERVICE||'%' AND FK_IDVEHICLE = VEH_ID;
+
+	IF(SERVICE_EXIST > 0) THEN
+		MILEAGE_SERVICE := '';	
+	END IF;
+  
+	RETURN MILEAGE_SERVICE;
+END;
+
+------------------------------------------------------------------------------------------------------------------------
+
+6.) --Create a stored procedure which accepts the id of vehicle as argument, inside the procedure you should:
+	--a. Call the function to assign the name of the service
+	--b. If the string is not empty, create a new service for that vehicle in status "Pending", current
+		--date, the description field should contains next text "Mandatory '9000_service' service; current
+		--mileage '9123'". 
+		--If the string is empty do nothing.
+	--c. Associate all the types of services to the service, for each type of service the status column
+	--must have the value "Pending". (0.5)
+
+--DROP PROCEDURE ASSOCIATE_SERVICES_VEHICLE(VEH_ID IN VEHICLE.IDVEHICLE%TYPE)
+	
+CREATE OR REPLACE PROCEDURE ASSOCIATE_SERVICES_VEHICLE(VEH_ID IN VEHICLE.IDVEHICLE%TYPE) AS
+
+	MILEAGE_SERVICE VARCHAR(20) := '';
+	VEHICLE_MILEAGE VEHICLE.MILEAGE%TYPE;
+	STATUS_SERVICE VARCHAR(30) := 'Pending';
+	STATUS_SERVICE_DETAILS VARCHAR(30) := 'Pending';
+	DESCRIPTION VARCHAR2(100) := '';
+BEGIN
+
+	MILEAGE_SERVICE := ASSIGN_NAME_OF_THE_SERVICE(VEH_ID);
+	
+  DBMS_OUTPUT.PUT_LINE('Respuesta de la función: ' || MILEAGE_SERVICE);
+  
+	IF MILEAGE_SERVICE IS NOT NULL THEN
+		--GET THE CURRENT MILEAGE FROM VEHICLE
+		SELECT MILEAGE INTO VEHICLE_MILEAGE FROM VEHICLE WHERE IDVEHICLE = VEH_ID;
+		
+		--THE DESCRIPTION TO INSERT
+		DESCRIPTION := 'Mandatory ' || MILEAGE_SERVICE || ' service; current mileage ' || VEHICLE_MILEAGE;
+		
+		--INSERT TO SERVICE TABLE
+		DBMS_OUTPUT.PUT_LINE('INSERTANDO EL SERVICIO...');
+		INSERT INTO SERVICE (SERVICE.FK_IDVEHICLE,SERVICE.NAME_SERVICE,SERVICE.DATE_ISSUE,SERVICE.DESCRIPTION,SERVICE.STATUS_SERVICE) 
+			VALUES (VEH_ID, DESCRIPTION, SYSDATE, NULL, STATUS_SERVICE);
+		
+		--INSERT TO DETAILS OF SERVICE
+		DBMS_OUTPUT.PUT_LINE('INSERTANDO LOS DETALLES DEL SERVICIO...');
+		FOR TYPE_SERVICE IN (SELECT * FROM TYPE_OF_SERVICE)
+		LOOP
+			INSERT INTO DETAIL_SERVICE(DETAIL_SERVICE.FK_IDSERVICE,DETAIL_SERVICE.FK_IDTYPES_OF_SERVICE,DETAIL_SERVICE.SERVICE_DETAILS_STATUS) 
+				VALUES (SEQ_Service.CURRVAL, TYPE_SERVICE.IDTYPE_OF_SERVICE, STATUS_SERVICE_DETAILS);
+	    END LOOP;
+		
+	END IF;
+  
+  DBMS_OUTPUT.PUT_LINE('PROCEDIMIENTO EJECUTADO...');
+END;
+
+
+-----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+8.) --Create a stored procedure to decrease the current value of vehicles as follows:
+	--a. If the class of vehicle is Moped, Motorcycle and Trike motorcycle 2% of the current value.
+	--b. If the class of vehicle is Car, Light rigid heavy vehicle, Medium rigid heavy vehicle 3% of the urrent value.
+	--c. Otherwise 5% of the current value.
+	--d. Only "manager_profile" is allowed to run the procedure and should print at the end "Number of
+	--vehicles updated successfully: xx" (0.5)
+  
+	--DROP PROCEDURE DECREASE_CURRENT_VALUE_VEH
+CREATE OR REPLACE PROCEDURE DECREASE_CURRENT_VALUE_VEH AS
+	VEHICLES_UPDATE NUMBER := 0;--VARIABLE PARA CONTAR LOS VEHICULOS A ACTUALIZAR
+	--CONSULTA TODOS LOS VEHICULOS CON TIPO
+	CURSOR get_VEHICLES_TYPE IS 
+	SELECT 
+		VEHICLE.IDVEHICLE,
+		TYPE_OF_VEHICLE.DESCRIPTION
+	FROM VEHICLE
+		INNER JOIN TYPE_OF_VEHICLE ON TYPE_OF_VEHICLE.IDTYPE_OF_VEHICLE = VEHICLE.FK_IDTYPE_OF_VEHICLE;
+	RECORDS get_VEHICLES_TYPE%ROWTYPE;
+	BEGIN
+	--SE RECORRE EL CURSOR
+	FOR objVEHICULO in get_VEHICLES_TYPE LOOP
+		--SI EL VEHICULO ES DE TIPO IN ('Moped', 'Motorcycle', 'Trike motorcycle'), SE LE REDUCE EL VALOR EN UN 2%
+		IF objVEHICULO.DESCRIPTION IN ('Moped', 'Motorcycle', 'Trike motorcycle') THEN
+			UPDATE VEHICLE SET CURRENT_VALUE = CURRENT_VALUE-(CURRENT_VALUE*0.02)
+			WHERE VEHICLE.IDVEHICLE = objVEHICULO.IDVEHICLE;
+			--SI EL VEHICULO ES DE TIPO IN ('Car', 'Light rigid heavy vehicle', 'Medium rigid heavy vehicle'), SE LE REDUCE EL VALOR EN UN 3%
+		ELSE IF objVEHICULO.DESCRIPTION IN ('Car', 'Light rigid heavy vehicle', 'Medium rigid heavy vehicle') THEN
+			UPDATE VEHICLE SET CURRENT_VALUE = CURRENT_VALUE-(CURRENT_VALUE*0.03)
+			WHERE VEHICLE.IDVEHICLE = objVEHICULO.IDVEHICLE;
+			--DE LO CONTRARIO, SE LE REDUCE EL VALOR EN UN 3%
+		ELSE 
+			UPDATE VEHICLE SET CURRENT_VALUE = CURRENT_VALUE-(CURRENT_VALUE*0.05)
+			WHERE VEHICLE.IDVEHICLE = objVEHICULO.IDVEHICLE;
+		END IF;
+		END IF;
+		VEHICLES_UPDATE := VEHICLES_UPDATE +1;
+	END LOOP;
+	--SE IMPRIME EL NRO DE VEHICULOS ACTUALIZADOS
+	DBMS_OUTPUT.PUT_LINE
+		('vehicles updated successfully: '|| VEHICLES_UPDATE);
+END;
+
