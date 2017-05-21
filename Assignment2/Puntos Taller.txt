@@ -462,3 +462,68 @@ COMMIT;
 
 --SELECT * FROM Vehicles_Per_Driver
 
+----------------------------
+
+--4.) --Create a view which should be run only by users associated to "finance_profile". The view should look like this:
+--Registration_number / Mileage / Model / Current_value / class / Replacement_Value / Status /
+--Required_special_qualification? / Number_of_services / Total_money_spent_in_repairs.
+--The view should show only class of cars: Car, Light rigid heavy vehicle, Medium rigid heavy vehicle,
+--heavy rigid vehicle, tractor and and filter the cars which were bought since 2 years ago and order them
+--by mileage (descending) (0.5)
+
+--DROP VIEW FINANCE_PROFILE_VIEW
+
+CREATE OR REPLACE VIEW FINANCE_PROFILE_VIEW AS
+	SELECT 
+		VEH.VEHICLE_NUMBER, 
+		VEH.MILEAGE, 
+		VEH.VEHICLE_MODEL, 
+		VEH.CURRENT_VALUE, 
+		TOV.DESCRIPTION AS CLASS, 
+		VEH.REPLACEMENT_VALUE, 
+		VEH.VEHICLE_STATUS,
+		TOV.SPECIAL_QUANTIFICATION AS REQUIRED_SPECIAL_QUALIFICATION, 
+		(SELECT COUNT(1) FROM SERVICE WHERE SERVICE.FK_IDVEHICLE = VEH.IDVEHICLE) AS NUMBER_OF_SERVICES,
+		(SELECT SUM(AMOUNT) FROM COST_REPAIR WHERE COST_REPAIR.FK_IDVEHICLE = VEH.IDVEHICLE) AS TOTAL_MONEY_SPENT_IN_REPAIRS
+	FROM VEHICLE VEH
+		JOIN TYPE_OF_VEHICLE TOV ON TOV.IDTYPE_OF_VEHICLE = VEH.FK_IDTYPE_OF_VEHICLE
+	WHERE TOV.DESCRIPTION IN ('Car', 'Light rigid heavy vehicle', 'Medium rigid heavy vehicle', 'Heavy rigid vehicle', 'Tractor') 
+		AND TO_CHAR(VEH.BOUGH_DAY, 'YYYY') >= (TO_CHAR(SYSDATE, 'YYYY') - 2)
+	ORDER BY VEH.MILEAGE DESC;
+
+--5.) --Create a function to assign the name of the service, this function should return a string. The string
+--must have the number of mileages run, and remember each revision is performed every 3 months, the
+--name has the structure "mileage_service", for instance (3000_service, 6000_service, 9000_service). If
+--the name already exist in the service table for that vehicle, must return an empty string, otherwise you
+--need to calculate the number based on the current mileage, for instance, if the mileage of the car is
+--11560 miles the name should return "9000_service". (0.5)
+
+--DROP FUNCTION ASSIGN_NAME_OF_THE_SERVICE(VEH_ID IN VEHICLE.IDVEHICLE%TYPE)
+
+CREATE OR REPLACE FUNCTION ASSIGN_NAME_OF_THE_SERVICE(VEH_ID IN VEHICLE.IDVEHICLE%TYPE)
+RETURN VARCHAR IS
+   MILEAGE_SERVICE VARCHAR(20) := '';   
+   
+	VEHICLE_MILEAGE VEHICLE.MILEAGE%TYPE;
+	SERVICE_EXIST NUMBER(2);	
+BEGIN
+	SELECT MILEAGE INTO VEHICLE_MILEAGE FROM VEHICLE WHERE IDVEHICLE = VEH_ID;
+
+	IF VEHICLE_MILEAGE >= 3000 AND VEHICLE_MILEAGE < 6000 THEN
+		MILEAGE_SERVICE := '3000_service';
+	ELSE IF VEHICLE_MILEAGE >= 6000 AND VEHICLE_MILEAGE < 9000 THEN
+			MILEAGE_SERVICE := '6000_service';
+		ELSE IF VEHICLE_MILEAGE >= 9000 THEN
+				MILEAGE_SERVICE := '9000_service';	
+			END IF;
+		END IF;	
+	END IF;
+
+	SELECT COUNT(1) INTO SERVICE_EXIST FROM SERVICE WHERE NAME_SERVICE LIKE '%'||MILEAGE_SERVICE||'%' AND FK_IDVEHICLE = VEH_ID;
+
+	IF(SERVICE_EXIST > 0) THEN
+		MILEAGE_SERVICE := '';	
+	END IF;
+  
+	RETURN MILEAGE_SERVICE;
+END;
